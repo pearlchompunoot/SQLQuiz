@@ -113,7 +113,7 @@ ans = [
 app = dash.Dash(external_stylesheets=[dbc.themes.JOURNAL],suppress_callback_exceptions=True)
 app.title = "SQL Quiz"
 
-
+server = app.server
 # App Layout
 app.layout = html.Div(
     style={'backgroundColor': 'rgba(168, 212, 247)', 'padding': '100px', 'fontFamily': 'Verdana'}, children=[
