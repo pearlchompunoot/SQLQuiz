@@ -148,6 +148,17 @@ app.layout = html.Div(
         }),
 
         html.Div(id='results-area', style={'color': 'black', 'fontSize': '25px', 'textAlign': 'center', 'marginTop': '30px'}, hidden=True),
+        html.Button('Restart Quiz', id='restart-button', n_clicks=0, style={  # RESTART BUTTON IN LAYOUT
+            'fontSize': '18px',
+            'padding': '20px',
+            'backgroundColor': 'white',
+            'color': 'dark blue',
+            'border': 'none',
+            'borderRadius': '5px',
+            'cursor': 'pointer',
+            "margin-top": "20px",
+            "margin-left":"15px"
+        }),
         dcc.Store(id='current-question-index', data=0),
         dcc.Store(id='user-score', data=0),
         dcc.Store(id='shuffled-questions', data=[]),
@@ -166,37 +177,39 @@ app.layout = html.Div(
      Output('shuffled-questions', 'data'),
      Output('answer-submitted', 'data')],
     [Input('next-button', 'n_clicks'),
-     Input('submit-button', 'n_clicks')],
+     Input('submit-button', 'n_clicks'),
+     Input('restart-button', 'n_clicks')],  # RESTART BUTTON INPUT
     [State('answer-options', 'value'),
      State('current-question-index', 'data'),
      State('shuffled-questions', 'data'),
      State('user-score', 'data'),
      State('answer-submitted', 'data')]
 )
-def update_quiz(next_clicks, submit_clicks, selected_answer, question_index, shuffled_questions, user_score, answer_submitted):
+def update_quiz(next_clicks, submit_clicks, restart_clicks, selected_answer, question_index, shuffled_questions, user_score, answer_submitted):
+    #                               ^^^^^^^^^^^^^^^^  Added 'restart_clicks' parameter
     ctx = dash.callback_context
     if not ctx.triggered:
         triggered_id = 'initialize'
     else:
         triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    print(f"--- update_quiz START --- triggered_id: {triggered_id}, submit_clicks: {submit_clicks}, next_clicks: {next_clicks}, answer_submitted: {answer_submitted}")
+    print(f"--- update_quiz START --- triggered_id: {triggered_id}, submit_clicks: {submit_clicks}, next_clicks: {next_clicks}, answer_submitted: {answer_submitted}, restart_clicks: {restart_clicks}") # DEBUG: Include restart_clicks
 
-    # Initialize quiz
-    if triggered_id == 'initialize' or not shuffled_questions:
+    # Initialize quiz (including Restart)
+    if triggered_id == 'initialize' or not shuffled_questions or triggered_id == 'restart-button':  # RESTART BUTTON TRIGGER
         questions_list = list(question.keys())
         random.shuffle(questions_list)
-        submit_button_hidden_initial = False # Explicitly set for initialization
-        next_button_hidden_initial = True  # Explicitly set for initialization
-        print(f"  Quiz Initializing - Submit Button Hidden: {submit_button_hidden_initial}, Next Button Hidden: {next_button_hidden_initial}")
+        submit_button_hidden_initial = False
+        next_button_hidden_initial = True
+        print(f"  Quiz Initializing/Restarting - Submit Button Hidden: {submit_button_hidden_initial}, Next Button Hidden: {next_button_hidden_initial}")
         return (f"Question 1: {questions_list[0]}",
                 [{'label': opt, 'value': opt} for opt in question[questions_list[0]]],
                 "", True, next_button_hidden_initial, submit_button_hidden_initial, 0, 0, questions_list, False)
 
     # End of quiz
     if question_index >= len(shuffled_questions):
-        submit_button_hidden_end = True # Explicitly hide at end
-        next_button_hidden_end = True   # Explicitly hide at end
+        submit_button_hidden_end = True
+        next_button_hidden_end = True
         print(f"  Quiz Ended - Submit Button Hidden: {submit_button_hidden_end}, Next Button Hidden: {next_button_hidden_end}")
         return (f"Quiz Completed! Your Score: {user_score} out of {len(shuffled_questions)}",
                 [], "", False, next_button_hidden_end, submit_button_hidden_end, question_index, user_score, shuffled_questions, False)
@@ -209,14 +222,14 @@ def update_quiz(next_clicks, submit_clicks, selected_answer, question_index, shu
     feedback = ""
     updated_score = user_score
     updated_answer_submitted = answer_submitted
-    next_button_hidden = True  # Initially hide Next button for each question cycle
-    submit_button_hidden = False  # Initially show Submit button for each question cycle
+    next_button_hidden = True
+    submit_button_hidden = False
 
     # Handle answer submission
     if triggered_id == 'submit-button' and not answer_submitted:
         updated_answer_submitted = True
-        next_button_hidden = False  # Show Next button after submit
-        submit_button_hidden = True  # Hide Submit button after submit
+        next_button_hidden = False
+        submit_button_hidden = True
         print(f"  Answer Submitted - Submit Button Hidden: {submit_button_hidden}, Next Button Hidden: {next_button_hidden}")
         if selected_answer == correct_answer:
             feedback = "✅ Correct!"
@@ -228,16 +241,16 @@ def update_quiz(next_clicks, submit_clicks, selected_answer, question_index, shu
     if triggered_id == 'next-button':
         question_index += 1
         updated_answer_submitted = False
-        next_button_hidden = True  # Hide Next button again for the new question
-        submit_button_hidden = False  # Show Submit button for new question
+        next_button_hidden = True
+        submit_button_hidden = False
         print(f"  Next Button Clicked - Submit Button Hidden: {submit_button_hidden}, Next Button Hidden: {next_button_hidden}")
         if question_index < len(shuffled_questions):
             return (f"Question {question_index + 1}: {shuffled_questions[question_index]}",
                     [{'label': opt, 'value': opt} for opt in question[shuffled_questions[question_index]]],
                     "", True, next_button_hidden, submit_button_hidden, question_index, updated_score, shuffled_questions, False) # Next hidden, Submit Visible
         else: # Quiz ended after clicking Next on last question
-            submit_button_hidden_end_next = True 
-            next_button_hidden_end_next = True    
+            submit_button_hidden_end_next = True
+            next_button_hidden_end_next = True
             print(f"  Quiz Ended after Next - Submit Button Hidden: {submit_button_hidden_end_next}, Next Button Hidden: {next_button_hidden_end_next}")
             return (f"Quiz Completed! Your Score: {updated_score} out of {len(shuffled_questions)}",
                     [], "", False, next_button_hidden_end_next, submit_button_hidden_end_next, question_index, user_score, shuffled_questions, False) # Both buttons hidden at end
