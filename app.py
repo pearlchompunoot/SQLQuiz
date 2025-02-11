@@ -148,7 +148,7 @@ app.layout = html.Div(
         }),
 
         html.Div(id='results-area', style={'color': 'black', 'fontSize': '25px', 'textAlign': 'center', 'marginTop': '30px'}, hidden=True),
-        html.Button('Restart Quiz', id='restart-button', n_clicks=0, style={  # RESTART BUTTON IN LAYOUT
+        html.Button('Restart Quiz', id='restart-button', n_clicks=0, style={
             'fontSize': '18px',
             'padding': '20px',
             'backgroundColor': 'white',
@@ -178,7 +178,7 @@ app.layout = html.Div(
      Output('answer-submitted', 'data')],
     [Input('next-button', 'n_clicks'),
      Input('submit-button', 'n_clicks'),
-     Input('restart-button', 'n_clicks')],  # RESTART BUTTON INPUT
+     Input('restart-button', 'n_clicks')],  
     [State('answer-options', 'value'),
      State('current-question-index', 'data'),
      State('shuffled-questions', 'data'),
@@ -186,7 +186,7 @@ app.layout = html.Div(
      State('answer-submitted', 'data')]
 )
 def update_quiz(next_clicks, submit_clicks, restart_clicks, selected_answer, question_index, shuffled_questions, user_score, answer_submitted):
-    #                               ^^^^^^^^^^^^^^^^  Added 'restart_clicks' parameter
+    #                            
     ctx = dash.callback_context
     if not ctx.triggered:
         triggered_id = 'initialize'
@@ -196,7 +196,7 @@ def update_quiz(next_clicks, submit_clicks, restart_clicks, selected_answer, que
     print(f"--- update_quiz START --- triggered_id: {triggered_id}, submit_clicks: {submit_clicks}, next_clicks: {next_clicks}, answer_submitted: {answer_submitted}, restart_clicks: {restart_clicks}") # DEBUG: Include restart_clicks
 
     # Initialize quiz (including Restart)
-    if triggered_id == 'initialize' or not shuffled_questions or triggered_id == 'restart-button':  # RESTART BUTTON TRIGGER
+    if triggered_id == 'initialize' or not shuffled_questions or triggered_id == 'restart-button': 
         questions_list = list(question.keys())
         random.shuffle(questions_list)
         submit_button_hidden_initial = False
